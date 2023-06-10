@@ -1,0 +1,40 @@
+#include <ncurses.h>
+
+int main() {
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+
+    int board[21][21] = {{2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2}, {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, {1,0,0,0,0,0,0,3,4,4,0,0,0,0,0,0,0,1}, {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, {2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2}};
+    
+    for (int i = 0; i < 7; i++) {
+        for (int j = 0; j < 18  ; j++) {
+            move(i, j * 2);
+
+            if (board[i][j] == 0) {
+                addch('0');
+                addch(' ');
+            } else if (board[i][j] == 1) {
+                addch('1');
+                addch(' ');
+            } else if (board[i][j] == 2) {
+                addch('2');
+                addch(' ');
+            } else if (board[i][j] == 3) {
+                addch('3');
+                addch(' ');
+            } else if (board[i][j] == 4) {
+                addch('4');
+                addch(' ');
+            }
+        }
+    }
+
+    refresh();
+
+    getch();
+
+    endwin();
+    return 0;
+}
