@@ -1,0 +1,89 @@
+#include <ncurses.h>
+#include <unistd.h>
+
+int main() {
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+
+    int board[21][21] = {
+        {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 3, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2}
+    };
+
+    int headX = 2;
+    int headY = 2;
+    int direction = KEY_RIGHT;
+
+    while (1) {
+        clear();
+
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 18; j++) {
+                move(i, j * 2);
+
+                if (board[i][j] == 0) {
+                    addch('0');
+                    addch(' ');
+                } else if (board[i][j] == 1) {
+                    addch('1');
+                    addch(' ');
+                } else if (board[i][j] == 2) {
+                    addch('2');
+                    addch(' ');
+                } else if (board[i][j] == 3) {
+                    addch('3');
+                    addch(' ');
+                } else if (board[i][j] == 4) {
+                    addch('4');
+                    addch(' ');
+                }
+            }
+        }
+
+        move(headY, headX * 2);
+        addch('S');
+        addch(' ');
+
+        refresh();
+
+        usleep(500000);
+
+        int key = getch();
+
+        if (key == KEY_UP && direction != KEY_DOWN) {
+            direction = KEY_UP;
+        } else if (key == KEY_DOWN && direction != KEY_UP) {
+            direction = KEY_DOWN;
+        } else if (key == KEY_LEFT && direction != KEY_RIGHT) {
+            direction = KEY_LEFT;
+        } else if (key == KEY_RIGHT && direction != KEY_LEFT) {
+            direction = KEY_RIGHT;
+        }
+
+        switch (direction) {
+            case KEY_UP:
+                headY--;
+                break;
+            case KEY_DOWN:
+                headY++;
+                break;
+            case KEY_LEFT:
+                headX--;
+                break;
+            case KEY_RIGHT:
+                headX++;
+                break;
+        }
+    }
+
+    endwin();
+    return 0;
+}
