@@ -10,6 +10,7 @@ int main() {
     keypad(stdscr, TRUE);
     nodelay(stdscr, TRUE);
 
+    //기본 맵
     int board[21][21];
 
     for (int i = 0; i < 21; i++) {
@@ -24,6 +25,7 @@ int main() {
         }
     }
 
+    //뱀 시작 위치
     vector<int> x;
     vector<int> y;
     x.push_back(10);
@@ -34,22 +36,14 @@ int main() {
     y.push_back(12);
 
 
-
     int headX = 10;
     int headY = 10;
-
-    int tailX = 10;
-    int tailY = 12;
-
-    int prevheadX = 10;
-    int prevheadY = 10;
-    int prevtailX = 10;
-    int prevtailY = 12;
     int direction = KEY_RIGHT;
 
     while (1) {
         clear();
         
+        //기본 맵 만듬
         for (int i = 0; i < 21; i++) {
             for (int j = 0; j < 21; j++) {
                 move(i, j * 2);
@@ -68,6 +62,7 @@ int main() {
         }
         
 
+        //노선 바꾸는 뱀 시각화
         move(y.front(), x.front() * 2);
         addch('3');
         addch(' ');
@@ -78,23 +73,44 @@ int main() {
             addch(' ');
         }
 
+        //벽에 부딪혀서 게임 실패
+        if (board[headX][headY] == 1) {
+            break;
+        }
+
 
         refresh();
 
         usleep(500000);
 
+        //키보드 입력받음, 반대 입력받으면 실패
         int key = getch();
 
-        if (key == KEY_UP && direction != KEY_DOWN) {
-            direction = KEY_UP;
-        } else if (key == KEY_DOWN && direction != KEY_UP) {
-            direction = KEY_DOWN;
-        } else if (key == KEY_LEFT && direction != KEY_RIGHT) {
-            direction = KEY_LEFT;
-        } else if (key == KEY_RIGHT && direction != KEY_LEFT) {
-            direction = KEY_RIGHT;
+        if (key == KEY_UP) {
+            if (direction != KEY_DOWN) {
+                direction = KEY_UP;
+            } else {
+                break;
+            }   
+        } else if (key == KEY_DOWN) {
+            if (direction != KEY_UP) {
+                direction = KEY_DOWN;
+            } else {
+                break;
+            }
+        } else if (key == KEY_LEFT) {
+            if (direction != KEY_RIGHT) {
+                direction = KEY_LEFT;
+            } else {
+                break;
+            }    
+        } else if (key == KEY_RIGHT) {
+            if (direction != KEY_LEFT) {
+                direction = KEY_RIGHT;
+            } else {
+                break;
+            }   
         }
-
         switch (direction) {
             case KEY_UP:
                 headY--;
@@ -110,16 +126,13 @@ int main() {
                 break;
         }
 
+
         x.insert(x.begin(), headX);
         y.insert(y.begin(), headY);
-
         x.pop_back();
         y.pop_back();
-
-
-
     }
 
     endwin();
-    return 0;
+
 }
