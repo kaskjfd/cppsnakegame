@@ -1,0 +1,388 @@
+#include <ncurses.h>
+#include <unistd.h>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+int main() {
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+
+    //기본 맵
+    int board[21][21];
+
+    for (int i = 0; i < 21; i++) {
+        for (int j = 0; j < 21; j++) {
+            if (i == 0 && j == 0 || i == 0 && j == 20 || i == 20 && j == 0 || i == 20 && j == 20) {
+                board[i][j] = 2;
+            } else if (i == 0 || i == 20 || j == 0 || j == 20) {
+                board[i][j] = 1; 
+            }else {
+                board[i][j] = 0;
+            }
+        }
+    }
+
+    //뱀 시작 위치
+    vector<int> x;
+    vector<int> y;
+    x.push_back(10);
+    x.push_back(10);
+    x.push_back(10);
+    y.push_back(10);
+    y.push_back(11);
+    y.push_back(12);
+
+    int headX = 10;
+    int headY = 10;
+    int direction = KEY_RIGHT;
+
+    int growthItemX = -1; 
+    int growthItemY = -1; 
+    int poisonItemX = -1; 
+    int poisonItemY = -1;
+    int prevheadx,prevheady;
+    int gatecnt = 0;
+    int growthcnt = 0;
+    int poisoncnt = 0;
+    int maxlength = 3;
+
+    srand(time(NULL)); //
+    time_t itemTimer = time(NULL);
+
+
+    unsigned int seed = std::time(0);
+    std::srand(seed);
+    //gate 1 generate
+    vector<pair<int, int>> gate1;
+
+    for (int i = 0; i < 21; i++) {
+        for (int j = 0; j < 21; j++) {
+            if (board[i][j] == 1) {
+                gate1.push_back(std::make_pair(i, j));
+            }
+        }
+    }
+    int random = std::rand() % gate1.size();
+    int gate1x = gate1[random].first;
+    int gate1y = gate1[random].second;
+    board[gate1y][gate1x] = 7;
+
+    //gate 2 generate
+    vector<pair<int, int>> gate2;
+
+    for (int i = 0; i < 21; i++) {
+        for (int j = 0; j < 21; j++) {
+            if (board[i][j] == 1) {
+                gate2.push_back(std::make_pair(i, j));
+            }
+        }
+    }
+    random = std::rand() % gate2.size();
+    int gate2x = gate2[random].first;
+    int gate2y = gate2[random].second;
+    board[gate2y][gate2x] = 7;
+
+    //gate1 out locate
+    int gate1outx, gate1outy;
+    if (gate2x == 0) {
+        gate1outx = gate2x +1;
+        gate1outy = gate2y;
+    } else if (gate2x == 20) {
+        gate1outx = gate2x-1;
+        gate1outy = gate2y;
+    } else if (gate2y == 0) {
+        gate1outx = gate2x;
+        gate1outy = gate2y+1;
+    } else if (gate2y == 20) {
+        gate1outx = gate2x;
+        gate1outy = gate2y-1;
+    }
+
+    //gate2 out locate
+    int gate2outx, gate2outy;
+    if (gate1x == 0) {
+        gate2outx = gate1x +1;
+        gate2outy = gate1y;
+    } else if (gate1x == 20) {
+        gate2outx = gate1x-1;
+        gate2outy = gate1y;
+    } else if (gate1y == 0) {
+        gate2outx = gate1x;
+        gate2outy = gate1y+1;
+    } else if (gate1y == 20) {
+        gate2outx = gate1x;
+        gate2outy = gate1y-1;
+    }
+
+
+    while (1) {
+        clear();
+        
+        //기본 맵 만듬
+        for (int i = 0; i < 21; i++) {
+            for (int j = 0; j < 21; j++) {
+                move(i, j * 2);
+
+                if (board[i][j] == 0) {
+                    addch('0');
+                    addch(' ');
+                } else if (board[i][j] == 1) {
+                    addch('1');
+                    addch(' ');
+                } else if (board[i][j] == 2) {
+                    addch('2');
+                    addch(' ');
+                }  else if (board[i][j] == 5) { 
+                    addch('5');
+                    addch(' ');
+                } else if (board[i][j] == 6) {
+                    addch('6');
+                    addch(' ');
+                }else if (board[i][j] == 7) {
+                    addch('7');
+                    addch(' ');
+                }
+            }
+        }
+
+        //미션 성공여부
+        char maxlengthmisson = ' ';
+        char growthmisson = ' ';
+        char poisonmisson = ' ';
+        char gatemisson = ' ';
+        if (growthcnt >= 5) {
+            growthmisson = 'v';
+        }
+        if (poisoncnt >= 1) {
+            poisonmisson = 'v';
+        }
+        if (gatecnt >= 1) {
+            gatemisson = 'v';
+        }
+        if (maxlength >= 10) {
+            maxlengthmisson = 'v';
+        }
+
+        //게임승리 여부
+        if (maxlengthmisson == 'v' && growthmisson == 'v' && poisonmisson == 'v' && gatemisson == 'v') {
+            break;
+        }
+
+        int height = 7;
+        int width = 30;
+        int starty = 0;
+        int startx = 50;
+        int starty2 = starty + height + 1;
+
+        WINDOW *win = subwin(stdscr, height, width, starty, startx);
+        init_pair(2, COLOR_BLACK, COLOR_WHITE);
+        box(win, 0, 0);
+        attron(COLOR_PAIR(2));
+        mvwprintw(win, 0, 2, "Score Board");
+        mvwprintw(win, 1, 2, "B: ");
+        mvwprintw(win, 1, 5, "%d / %d", (int)x.size(), maxlength);
+        mvwprintw(win, 2, 2, "+: ");
+        mvwprintw(win, 2, 5, "%d", growthcnt);
+        mvwprintw(win, 3, 2, "-: ");
+        mvwprintw(win, 3, 5, "%d", poisoncnt);
+        mvwprintw(win, 4, 2, "G: ");
+        mvwprintw(win, 4, 5, "%d", gatecnt);
+        wbkgd(win, COLOR_PAIR(2));
+        attroff(COLOR_PAIR(2));
+        wrefresh(win);
+
+
+        WINDOW *win2 = subwin(stdscr, height, width, starty2, startx);
+        box(win2, 0, 0);
+        attron(COLOR_PAIR(2));
+        mvwprintw(win2, 0, 2, "Mission");
+        mvwprintw(win2, 1, 2, "B: ");
+        mvwprintw(win2, 1, 5, "(%c)", maxlengthmisson);
+        mvwprintw(win2, 2, 2, "+: ");
+        mvwprintw(win2, 2, 5, "(%c)", growthmisson);
+        mvwprintw(win2, 3, 2, "-: ");
+        mvwprintw(win2, 3, 5, "(%c)", poisonmisson);
+        mvwprintw(win2, 4, 2, "G: ");
+        mvwprintw(win2, 4, 5, "(%c)", gatemisson);
+        wbkgd(win2, COLOR_PAIR(2));
+        attroff(COLOR_PAIR(2));
+        wrefresh(win2);
+
+
+        //게이트 통과
+        if (headX == gate1x && headY == gate1y) {
+            x[0] = gate1outx;
+            y[0] = gate1outy;
+            headX = gate1outx;
+            headY = gate1outy;
+            if (gate2x == 0) {
+                direction = KEY_RIGHT;
+            } else if (gate2x == 20) {
+                direction = KEY_LEFT;
+            } else if (gate2y == 0) {
+                direction = KEY_DOWN;
+            } else if (gate2y == 20) {
+                direction = KEY_UP;
+            }
+            gatecnt += 1;
+        } else if (headX == gate2x && headY == gate2y) {
+            x[0] = gate2outx;
+            y[0] = gate2outy;
+            headX = gate2outx;
+            headY = gate2outy;
+            if (gate1x == 0) {
+                direction = KEY_RIGHT;
+            } else if (gate1x == 20) {
+                direction = KEY_LEFT;
+            } else if (gate1y == 0) {
+                direction = KEY_DOWN;
+            } else if (gate1y == 20) {
+                direction = KEY_UP;
+            }
+            gatecnt += 1;
+        }
+
+
+        //아이템 획득시
+        if (board[headY][headX] == 5) {
+            x.push_back(prevheadx);
+            y.push_back(prevheady);
+            board[headY][headX] = 0;
+            growthcnt += 1;
+        } else if (board[headY][headX] == 6) {
+            x.pop_back();
+            y.pop_back();
+            board[headY][headX] = 0;
+            poisoncnt += 1;
+        }
+
+        //노선 바꾸는 뱀 시각화
+        move(y.front(), x.front() * 2);
+        addch('3');
+        addch(' ');
+
+        for (int i = 1; i < x.size(); i++) {
+            move(y[i], x[i] * 2);
+            addch('4');
+            addch(' ');
+        }
+
+
+        if (x.size() > maxlength) {
+            maxlength = x.size();
+        } 
+
+        //게임 종료 조건
+        if (board[headY][headX] == 1 || x.size() < 3) {
+            break;
+        }
+        int br = false;
+        for (int i = 1; i < x.size(); i++) {
+            if (x[0] == x[i] && y[0] == y[i]) {
+                br = true;
+                break;
+            }
+        }
+        if (br) {
+            break;
+        }
+
+
+        //아이템 랜덤 생성
+        time_t currentTime = time(NULL);
+
+
+        if (currentTime - itemTimer >= 5) { 
+            growthItemX = -1;
+            growthItemY = -1;
+        }
+
+        if (currentTime - itemTimer >= 8) { 
+            poisonItemX = -1;
+            poisonItemY = -1;
+        }
+
+        if (growthItemX == -1 && growthItemY == -1) { 
+            int randX = rand() % 19 + 1; 
+            int randY = rand() % 19 + 1; 
+            if (board[randX][randY] == 0) { 
+                growthItemX = randX;
+                growthItemY = randY;
+                board[growthItemX][growthItemY] = 5; 
+                itemTimer = currentTime; 
+            }
+        }
+
+        if (poisonItemX == -1 && poisonItemY == -1) { 
+            int randX = rand() % 19 + 1;
+            int randY = rand() % 19 + 1;
+            if (board[randX][randY] == 0) { 
+                poisonItemX = randX;
+                poisonItemY = randY;
+                board[poisonItemX][poisonItemY] = 6;
+                itemTimer = currentTime; 
+            }
+        }
+
+        refresh();
+
+        usleep(500000);
+
+        //키보드 입력받음, 반대 입력받으면 실패
+        int key = getch();
+
+        if (key == KEY_UP) {
+            if (direction != KEY_DOWN) {
+                direction = KEY_UP;
+            } else {
+                break;
+            }   
+        } else if (key == KEY_DOWN) {
+            if (direction != KEY_UP) {
+                direction = KEY_DOWN;
+            } else {
+                break;
+            }
+        } else if (key == KEY_LEFT) {
+            if (direction != KEY_RIGHT) {
+                direction = KEY_LEFT;
+            } else {
+                break;
+            }    
+        } else if (key == KEY_RIGHT) {
+            if (direction != KEY_LEFT) {
+                direction = KEY_RIGHT;
+            } else {
+                break;
+            }   
+        }
+        switch (direction) {
+            case KEY_UP:
+                headY--;
+                break;
+            case KEY_DOWN:
+                headY++;
+                break;
+            case KEY_LEFT:
+                headX--;
+                break;
+            case KEY_RIGHT:
+                headX++;
+                break;
+        }
+        prevheadx = x.back();
+        prevheady = y.back();
+        x.insert(x.begin(), headX);
+        y.insert(y.begin(), headY);
+        x.pop_back();
+        y.pop_back();
+    }
+
+    endwin();
+
+}
