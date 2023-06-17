@@ -1,0 +1,204 @@
+#include <ncurses.h>
+#include <unistd.h>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+int main() {
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+
+    //기본 맵
+    int board[21][21];
+
+    for (int i = 0; i < 21; i++) {
+        for (int j = 0; j < 21; j++) {
+            if (i == 0 && j == 0 || i == 0 && j == 20 || i == 20 && j == 0 || i == 20 && j == 20) {
+                board[i][j] = 2;
+            } else if (i == 0 || i == 20 || j == 0 || j == 20) {
+                board[i][j] = 1;
+            } else {
+                board[i][j] = 0;
+            }
+        }
+    }
+
+    //뱀 시작 위치
+    vector<int> x;
+    vector<int> y;
+    x.push_back(10);
+    x.push_back(10);
+    x.push_back(10);
+    y.push_back(10);
+    y.push_back(11);
+    y.push_back(12);
+
+    int headX = 10;
+    int headY = 10;
+    int direction = KEY_RIGHT;
+
+    int growthItemX = -1; 
+    int growthItemY = -1; 
+    int poisonItemX = -1; 
+    int poisonItemY = -1;
+
+    srand(time(NULL)); //
+    time_t itemTimer = time(NULL);
+
+    while (1) {
+        clear();
+
+        //기본 맵 만듬
+        for (int i = 0; i < 21; i++) {
+            for (int j = 0; j < 21; j++) {
+                move(i, j * 2);
+
+                if (board[i][j] == 0) {
+                    addch('0');
+                    addch(' ');
+                } else if (board[i][j] == 1) {
+                    addch('1');
+                    addch(' ');
+                } else if (board[i][j] == 2) {
+                    addch('2');
+                    addch(' ');
+                } else if (board[i][j] == 5) { 
+                    addch('5');
+                    addch(' ');
+                } else if (board[i][j] == 6) {
+                    addch('6');
+                    addch(' ');
+                }
+            }
+        }
+
+        //노선 바꾸는 뱀 시각화
+        move(y.front(), x.front() * 2);
+        addch('3');
+        addch(' ');
+
+        for (int i = 1; i < x.size(); i++) {
+            move(y[i], x[i] * 2);
+            addch('4');
+            addch(' ');
+        }
+
+      
+        if (board[headX][headY] == 1 || x.size() < 3) {
+            break;
+        }
+
+        time_t currentTime = time(NULL);
+
+        if (currentTime - itemTimer >= 5) { 
+            growthItemX = -1;
+            growthItemY = -1;
+        }
+
+        if (currentTime - itemTimer >= 8) { 
+            poisonItemX = -1;
+            poisonItemY = -1;
+        }
+
+        if (growthItemX == -1 && growthItemY == -1) { 
+            int randX = rand() % 19 + 1; 
+            int randY = rand() % 19 + 1; 
+            if (board[randX][randY] == 0) { 
+                growthItemX = randX;
+                growthItemY = randY;
+                board[growthItemX][growthItemY] = 5; 
+                itemTimer = currentTime; 
+            }
+        }
+
+        if (poisonItemX == -1 && poisonItemY == -1) { 
+            int randX = rand() % 19 + 1;
+            int randY = rand() % 19 + 1;
+            if (board[randX][randY] == 0) { 
+                poisonItemX = randX;
+                poisonItemY = randY;
+                board[poisonItemX][poisonItemY] = 6;
+                itemTimer = currentTime; 
+            }
+        }
+
+        //키보드 입력받음, 반대 입력 받으면 실패
+        int key = getch();
+
+        if (key == KEY_UP) {
+            if (direction != KEY_DOWN) {
+                direction = KEY_UP;
+            } else {
+                break;
+            }
+        } else if (key == KEY_DOWN) {
+            if (direction != KEY_UP) {
+                direction = KEY_DOWN;
+            } else {
+                break;
+            }
+        } else if (key == KEY_LEFT) {
+            if (direction != KEY_RIGHT) {
+                direction = KEY_LEFT;
+            } else {
+                break;
+            }
+        } else if (key == KEY_RIGHT) {
+            if (direction != KEY_LEFT) {
+                direction = KEY_RIGHT;
+            } else {
+                break;
+            }
+        }
+
+       
+        switch (direction) {
+            case KEY_UP:
+                headY--;
+                break;
+            case KEY_DOWN:
+                headY++;
+                break;
+            case KEY_LEFT:
+                headX--;
+                break;
+            case KEY_RIGHT:
+                headX++;
+                break;
+        }
+
+        if (headX == growthItemX && headY == growthItemY) {
+            x.push_back(x.back());
+            y.push_back(y.back());
+            growthItemX = -1; 
+            growthItemY = -1;
+        }
+
+        if (headX == poisonItemX && headY == poisonItemY) {
+            x.pop_back(); 
+            y.pop_back();
+            poisonItemX = -1; 
+            poisonItemY = -1;
+        }
+
+        x.insert(x.begin(), headX);
+        y.insert(y.begin(), headY);
+
+       
+        if (growthItemX == -1 && growthItemY == -1) {
+            x.pop_back();
+            y.pop_back();
+        }
+
+        usleep(150000); 
+    }
+
+    endwin();
+
+    return 0;
+}
