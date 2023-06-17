@@ -86,7 +86,7 @@ public:
         } else if (gate2y == 20) {
             gate1outx = gate2x;
             gate1outy = gate2y-1;
-        }
+        } 
 
         //gate2 out locate
         int gate2outx, gate2outy;
@@ -103,7 +103,6 @@ public:
             gate2outx = gate1x;
             gate2outy = gate1y-1;
         }
-
 
         while (1) {
             clear();
@@ -201,10 +200,6 @@ public:
 
             //게이트 통과
             if (headX == gate1x && headY == gate1y) {
-                x[0] = gate1outx;
-                y[0] = gate1outy;
-                headX = gate1outx;
-                headY = gate1outy;
                 if (gate2x == 0) {
                     direction = KEY_RIGHT;
                 } else if (gate2x == 20) {
@@ -213,13 +208,107 @@ public:
                     direction = KEY_DOWN;
                 } else if (gate2y == 20) {
                     direction = KEY_UP;
+                } else {
+                if (direction == KEY_RIGHT) {
+                    if (board[gate2y][gate2x + 1] != 1) {
+                        gate1outx = gate2x +1;
+                        gate1outy = gate2y;
+                    } else {
+                        if (board[gate2y + 1][gate2x] != 1) {
+                            gate1outx = gate2x;
+                            gate1outy = gate2y + 1;
+                            direction = KEY_DOWN;
+                        } else {
+                            if (board[gate2y - 1][gate2x] != 1) {
+                                gate1outx = gate2x;
+                                gate1outy = gate2y - 1;
+                                direction = KEY_UP;
+                            } else {
+                            if (board[gate2y][gate2x - 1] != 1) {
+                                gate1outx = gate2x - 1;
+                                gate1outy = gate2y;
+                                direction = KEY_LEFT;
+                            }
+                        }
+                    }
                 }
+            }  else if (direction == KEY_LEFT) {
+                if (board[gate2y][gate2x - 1] != 1) {
+                        gate1outx = gate2x -1;
+                        gate1outy = gate2y;
+                    } else {
+                        if (board[gate2y - 1][gate2x] != 1) {
+                            gate1outx = gate2x;
+                            gate1outy = gate2y + 1;
+                            direction = KEY_UP;
+                        } else {
+                            if (board[gate2y + 1][gate2x] != 1) {
+                                gate1outx = gate2x;
+                                gate1outy = gate2y - 1;
+                                direction = KEY_DOWN;
+                            } else {
+                            if (board[gate2y][gate2x + 1] != 1) {
+                                gate1outx = gate2x - 1;
+                                gate1outy = gate2y;
+                                direction = KEY_RIGHT;
+                            }
+                        }
+                    }
+                }
+                } else if (direction == KEY_UP) {
+                    if (board[gate2y - 1][gate2x] != 1) {
+                        gate1outx = gate2x;
+                        gate1outy = gate2y - 1;
+                    } else {
+                        if (board[gate2y][gate2x + 1] != 1) {
+                            gate1outx = gate2x + 1;
+                            gate1outy = gate2y;
+                            direction = KEY_RIGHT;
+                        } else {
+                            if (board[gate2y][gate2x - 1] != 1) {
+                                gate1outx = gate2x - 1;
+                                gate1outy = gate2y;
+                                direction = KEY_LEFT;
+                            } else {
+                            if (board[gate2y + 1][gate2x] != 1) {
+                                gate1outx = gate2x;
+                                gate1outy = gate2y + 1;
+                                direction = KEY_DOWN;
+                            }
+                        }
+                    }
+                }
+                } else if (direction == KEY_DOWN) {
+                    if (board[gate2y + 1][gate2x] != 1) {
+                        gate1outx = gate2x;
+                        gate1outy = gate2y + 1;
+                    } else {
+                        if (board[gate2y][gate2x - 1] != 1) {
+                            gate1outx = gate2x - 1;
+                            gate1outy = gate2y;
+                            direction = KEY_LEFT;
+                        } else {
+                            if (board[gate2y][gate2x + 1] != 1) {
+                                gate1outx = gate2x + 1;
+                                gate1outy = gate2y;
+                                direction = KEY_RIGHT;
+                            } else {
+                            if (board[gate2y - 1][gate2x] != 1) {
+                                gate1outx = gate2x;
+                                gate1outy = gate2y - 1;
+                                direction = KEY_DOWN;
+                            }
+                        }
+                    }
+                }
+                }
+            }       
+                x[0] = gate1outx;
+                y[0] = gate1outy;
+                headX = gate1outx;
+                headY = gate1outy;
                 gatecnt += 1;
             } else if (headX == gate2x && headY == gate2y) {
-                x[0] = gate2outx;
-                y[0] = gate2outy;
-                headX = gate2outx;
-                headY = gate2outy;
                 if (gate1x == 0) {
                     direction = KEY_RIGHT;
                 } else if (gate1x == 20) {
@@ -228,7 +317,105 @@ public:
                     direction = KEY_DOWN;
                 } else if (gate1y == 20) {
                     direction = KEY_UP;
+                    } else {
+                if (direction == KEY_RIGHT) {
+                    if (board[gate1y][gate1x + 1] != 1) {
+                        gate2outx = gate1x +1;
+                        gate2outy = gate1y;
+                    } else {
+                        if (board[gate1y + 1][gate1x] != 1) {
+                            gate2outx = gate1x;
+                            gate2outy = gate1y + 1;
+                            direction = KEY_DOWN;
+                        } else {
+                            if (board[gate1y - 1][gate1x] != 1) {
+                                gate2outx = gate1x;
+                                gate2outy = gate1y - 1;
+                                direction = KEY_UP;
+                            } else {
+                            if (board[gate1y][gate1x - 1] != 1) {
+                                gate2outx = gate1x - 1;
+                                gate2outy = gate1y;
+                                direction = KEY_LEFT;
+                            }
+                        }
+                    }
                 }
+            }  else if (direction == KEY_LEFT) {
+                if (board[gate1y][gate1x - 1] != 1) {
+                        gate2outx = gate1x -1;
+                        gate2outy = gate1y;
+                    } else {
+                        if (board[gate1y - 1][gate1x] != 1) {
+                            gate2outx = gate1x;
+                            gate2outy = gate1y + 1;
+                            direction = KEY_UP;
+                        } else {
+                            if (board[gate1y + 1][gate1x] != 1) {
+                                gate2outx = gate1x;
+                                gate2outy = gate1y - 1;
+                                direction = KEY_DOWN;
+                            } else {
+                            if (board[gate1y][gate1x + 1] != 1) {
+                                gate2outx = gate1x - 1;
+                                gate2outy = gate1y;
+                                direction = KEY_RIGHT;
+                            }
+                        }
+                    }
+                }
+                } else if (direction == KEY_UP) {
+                    if (board[gate1y - 1][gate1x] != 1) {
+                        gate2outx = gate1x;
+                        gate2outy = gate1y - 1;
+                    } else {
+                        if (board[gate1y][gate1x + 1] != 1) {
+                            gate2outx = gate1x + 1;
+                            gate2outy = gate1y;
+                            direction = KEY_RIGHT;
+                        } else {
+                            if (board[gate1y][gate1x - 1] != 1) {
+                                gate2outx = gate1x - 1;
+                                gate2outy = gate1y;
+                                direction = KEY_LEFT;
+                            } else {
+                            if (board[gate1y + 1][gate1x] != 1) {
+                                gate2outx = gate1x;
+                                gate2outy = gate1y + 1;
+                                direction = KEY_DOWN;
+                            }
+                        }
+                    }
+                }
+                } else if (direction == KEY_DOWN) {
+                    if (board[gate1y + 1][gate1x] != 1) {
+                        gate2outx = gate1x;
+                        gate2outy = gate1y + 1;
+                    } else {
+                        if (board[gate1y][gate1x - 1] != 1) {
+                            gate2outx = gate1x - 1;
+                            gate2outy = gate1y;
+                            direction = KEY_LEFT;
+                        } else {
+                            if (board[gate1y][gate1x + 1] != 1) {
+                                gate2outx = gate1x + 1;
+                                gate2outy = gate1y;
+                                direction = KEY_RIGHT;
+                            } else {
+                            if (board[gate1y - 1][gate1x] != 1) {
+                                gate2outx = gate1x;
+                                gate2outy = gate1y - 1;
+                                direction = KEY_DOWN;
+                            }
+                        }
+                    }
+                }
+                }
+            }
+                 x[0] = gate2outx;
+                y[0] = gate2outy;
+                headX = gate2outx;
+                headY = gate2outy;
                 gatecnt += 1;
             }
 
@@ -389,6 +576,8 @@ int main() {
                         board[k][i][j] = 2;
                     } else if (i == 0 || i == 20 || j == 0 || j == 20) {
                         board[k][i][j] = 1;
+                    } else if ((i >= 10 && i <= 15 && j == 10) || (i == 10 && j >= 7 && j <= 13)) {
+                        board[k][i][j] = 1;
                     } else {
                         board[k][i][j] = 0;
                     }
@@ -402,7 +591,7 @@ int main() {
                         board[k][i][j] = 2;
                     } else if (i == 0 || i == 20 || j == 0 || j == 20) {
                         board[k][i][j] = 1;
-                    } else if (j == 10 && (i >= 9 && i <= 11)) {
+                    } else if (i == 10 && (j >= 3 && j <= 17)) {
                         board[k][i][j] = 1;
                     } else {
                         board[k][i][j] = 0;
@@ -417,7 +606,7 @@ int main() {
                         board[k][i][j] = 2;
                     } else if (i == 0 || i == 20 || j == 0 || j == 20) {
                         board[k][i][j] = 1;
-                    } else if (j == 10) {
+                    } else if (j == 10 && i >= 3 && i <= 18) {
                         board[k][i][j] = 1;
                     } else {
                         board[k][i][j] = 0;
