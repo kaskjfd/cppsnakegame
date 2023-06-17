@@ -1,0 +1,221 @@
+#include <ncurses.h>
+#include <unistd.h>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+int main() {
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+
+    //기본 맵
+    int board[21][21];
+
+    for (int i = 0; i < 21; i++) {
+        for (int j = 0; j < 21; j++) {
+            if (i == 0 && j == 0 || i == 0 && j == 20 || i == 20 && j == 0 || i == 20 && j == 20) {
+                board[i][j] = 2;
+            } else if (i == 0 || i == 20 || j == 0 || j == 20) {
+                board[i][j] = 1; 
+            }else {
+                board[i][j] = 0;
+            }
+        }
+    }
+
+    //뱀 시작 위치
+    vector<int> x;
+    vector<int> y;
+    x.push_back(10);
+    x.push_back(10);
+    x.push_back(10);
+    y.push_back(10);
+    y.push_back(11);
+    y.push_back(12);
+
+
+    int headX = 10;
+    int headY = 10;
+    int direction = KEY_RIGHT;
+
+
+    unsigned int seed = std::time(0);
+    std::srand(seed);
+    //gate 1 generate
+    vector<pair<int, int>> gate1;
+
+    for (int i = 0; i < 21; i++) {
+        for (int j = 0; j < 21; j++) {
+            if (board[i][j] == 1) {
+                gate1.push_back(std::make_pair(i, j));
+            }
+        }
+    }
+    int random = std::rand() % gate1.size();
+    int gate1x = gate1[random].first;
+    int gate1y = gate1[random].second;
+    board[gate1y][gate1x] = 7;
+
+    //gate 2 generate
+    vector<pair<int, int>> gate2;
+
+    for (int i = 0; i < 21; i++) {
+        for (int j = 0; j < 21; j++) {
+            if (board[i][j] == 1) {
+                gate2.push_back(std::make_pair(i, j));
+            }
+        }
+    }
+    random = std::rand() % gate2.size();
+    int gate2x = gate2[random].first;
+    int gate2y = gate2[random].second;
+    board[gate2y][gate2x] = 7;
+
+    //gate1 out locate
+    int gate1outx, gate1outy;
+    if (gate2x == 0) {
+        gate1outx = gate2x +1;
+        gate1outy = gate2y;
+    } else if (gate2x == 20) {
+        gate1outx = gate2x-1;
+        gate1outy = gate2y;
+    } else if (gate2y == 0) {
+        gate1outx = gate2x;
+        gate1outy = gate2y+1;
+    } else if (gate2y == 20) {
+        gate1outx = gate2x;
+        gate1outy = gate2y-1;
+    }
+
+    //gate2 out locate
+    int gate2outx, gate2outy;
+    if (gate1x == 0) {
+        gate2outx = gate1x +1;
+        gate2outy = gate1y;
+    } else if (gate1x == 20) {
+        gate2outx = gate1x-1;
+        gate2outy = gate1y;
+    } else if (gate1y == 0) {
+        gate2outx = gate1x;
+        gate2outy = gate1y+1;
+    } else if (gate1y == 20) {
+        gate2outx = gate1x;
+        gate2outy = gate1y-1;
+    }
+
+
+    while (1) {
+        clear();
+        
+        //기본 맵 만듬
+        for (int i = 0; i < 21; i++) {
+            for (int j = 0; j < 21; j++) {
+                move(i, j * 2);
+
+                if (board[i][j] == 0) {
+                    addch('0');
+                    addch(' ');
+                } else if (board[i][j] == 1) {
+                    addch('1');
+                    addch(' ');
+                } else if (board[i][j] == 2) {
+                    addch('2');
+                    addch(' ');
+                } else if (board[i][j] == 7) {
+                    addch('7');
+                    addch(' ');
+                }
+            }
+        }
+
+        //게이트 통과
+        if (headX == gate1x && headY == gate1y) {
+            x[0] = gate1outx;
+            y[0] = gate1outy;
+            headX = gate1outx;
+            headY = gate1outy;
+        } else if (headX == gate2x && headY == gate2y) {
+            x[0] = gate2outx;
+            y[0] = gate2outy;
+            headX = gate2outx;
+            headY = gate2outy;
+        }
+        
+
+        //노선 바꾸는 뱀 시각화
+        move(y.front(), x.front() * 2);
+        addch('3');
+        addch(' ');
+
+        for (int i = 1; i < x.size(); i++) {
+            move(y[i], x[i] * 2);
+            addch('4');
+            addch(' ');
+        }
+
+        //벽에 부딪혀서 게임 실패
+        if (board[headY][headX] == 1) {
+            break;
+        }
+
+        refresh();
+
+        usleep(500000);
+
+        //키보드 입력받음, 반대 입력받으면 실패
+        int key = getch();
+
+        if (key == KEY_UP) {
+            if (direction != KEY_DOWN) {
+                direction = KEY_UP;
+            } else {
+                break;
+            }   
+        } else if (key == KEY_DOWN) {
+            if (direction != KEY_UP) {
+                direction = KEY_DOWN;
+            } else {
+                break;
+            }
+        } else if (key == KEY_LEFT) {
+            if (direction != KEY_RIGHT) {
+                direction = KEY_LEFT;
+            } else {
+                break;
+            }    
+        } else if (key == KEY_RIGHT) {
+            if (direction != KEY_LEFT) {
+                direction = KEY_RIGHT;
+            } else {
+                break;
+            }   
+        }
+        switch (direction) {
+            case KEY_UP:
+                headY--;
+                break;
+            case KEY_DOWN:
+                headY++;
+                break;
+            case KEY_LEFT:
+                headX--;
+                break;
+            case KEY_RIGHT:
+                headX++;
+                break;
+        }
+
+
+        x.insert(x.begin(), headX);
+        y.insert(y.begin(), headY);
+        x.pop_back();
+        y.pop_back();
+    }
+
+    endwin();
+
+}
