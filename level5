@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <ncursesw/ncurses.h>
 #include <unistd.h>
 #include <vector>
 #include <cstdlib>
@@ -9,7 +10,7 @@ using namespace std;
 class games {
 public:
     bool gamelose = false;
-    void game(int board[][21]) {
+    void game(int board[][21], int stage) {
 
 
         //뱀 시작 위치
@@ -30,12 +31,17 @@ public:
         int growthItemY = -1; 
         int poisonItemX = -1; 
         int poisonItemY = -1;
+        int gameoverItemX = -1;
+        int gameoverItemY = -1;
         int prevheadx,prevheady;
         int gatecnt = 0;
         int growthcnt = 0;
         int poisoncnt = 0;
         int maxlength = 3;
         int fielditem = 0;
+        int gameoveritem = 0;
+        
+        int tick = 500000;
 
         srand(time(NULL)); //
         time_t itemTimer = time(NULL);
@@ -107,33 +113,83 @@ public:
 
         while (1) {
             clear();
-            
+
+                if (has_colors()) {
+                    start_color();
+                }
+
+
+            init_pair(1, COLOR_RED, COLOR_BLACK);     // 1에 대한 색상 페어
+            init_pair(2, COLOR_BLUE, COLOR_BLACK);    // 2에 대한 색상 페어
+            init_pair(5, COLOR_GREEN, COLOR_BLACK);   // 5에 대한 색상 페어
+            init_pair(6, COLOR_YELLOW, COLOR_BLACK);  // 6에 대한 색상 페어
+            init_pair(7, COLOR_MAGENTA, COLOR_BLACK); // 7에 대한 색상 페어
+            init_pair(9, COLOR_CYAN, COLOR_BLACK);
+
             //기본 맵 만듬
             for (int i = 0; i < 21; i++) {
                 for (int j = 0; j < 21; j++) {
                     move(i, j * 2);
 
+                    // 숫자에 따른 색상 설정
                     if (board[i][j] == 0) {
-                        addch(' ');
-                        addch(' ');
+                        addch(' ' | COLOR_PAIR(0));
+                        addch(' ' | COLOR_PAIR(0));
                     } else if (board[i][j] == 1) {
-                        addch('1');
-                        addch(' ');
+                        addch(ACS_BLOCK | COLOR_PAIR(1) | A_BOLD);
+                        addch(' ' | COLOR_PAIR(1));
                     } else if (board[i][j] == 2) {
-                        addch('2');
-                        addch(' ');
-                    }  else if (board[i][j] == 5) { 
-                        addch('5');
-                        addch(' ');
+                        addch(ACS_BLOCK | COLOR_PAIR(2) | A_BOLD);
+                        addch(' ' | COLOR_PAIR(2));
+                    } else if (board[i][j] == 5) {
+                        addch(ACS_BLOCK | COLOR_PAIR(5) | A_BOLD);
+                        addch(' ' | COLOR_PAIR(5));
                     } else if (board[i][j] == 6) {
-                        addch('6');
-                        addch(' ');
-                    }else if (board[i][j] == 7) {
-                        addch('7');
-                        addch(' ');
+                        addch(ACS_BLOCK | COLOR_PAIR(6) | A_BOLD);
+                        addch(' ' | COLOR_PAIR(6));
+                    } else if (board[i][j] == 7) {
+                        addch(ACS_BLOCK | COLOR_PAIR(7) | A_BOLD);
+                        addch(' ' | COLOR_PAIR(7));
+                    } else if (board[i][j] == 9) {
+                        addch(ACS_BLOCK | COLOR_PAIR(9) | A_BOLD);
+                        addch(' ' | COLOR_PAIR(9));
                     }
                 }
             }
+
+            //기본 맵 만듬
+            // for (int i = 0; i < 21; i++) {
+            //     for (int j = 0; j < 21; j++) {
+            //         move(i, j * 2);
+
+            //         if (board[i][j] == 0) {
+            //             addch(' ');
+            //             addch(' ');
+            //         } else if (board[i][j] == 1) {
+            //             addch('1');
+            //             addch(' ');
+            //         } else if (board[i][j] == 2) {
+            //             addch('2');
+            //             addch(' ');
+            //         } else if (board[i][j] == 5) {
+            //             addch('5');
+            //             addch(' ');
+            //         } else if (board[i][j] == 6) {
+            //             addch('6');
+            //             addch(' ');
+            //         } else if (board[i][j] == 7) {
+            //             addch('7');
+            //             addch(' ');
+            //         } else if (board[i][j] == 9) {
+            //             addch('9');
+            //             addch(' ');
+            //         }
+            //     }
+            // }
+
+
+
+
 
             //미션 성공여부
             char maxlengthmisson = ' ';
@@ -158,7 +214,7 @@ public:
                 break;
             }
 
-            int height = 7;
+            int height = 8;
             int width = 30;
             int starty = 0;
             int startx = 50;
@@ -177,6 +233,10 @@ public:
             mvwprintw(win, 3, 5, "%d", poisoncnt);
             mvwprintw(win, 4, 2, "G: ");
             mvwprintw(win, 4, 5, "%d", gatecnt);
+            mvwprintw(win, 5, 2, "stage: ");
+            mvwprintw(win, 5, 9, "%d", stage);
+            mvwprintw(win, 6, 2, "tick: ");
+            mvwprintw(win, 6, 8, "%d", tick/100000);
             wbkgd(win, COLOR_PAIR(2));
             attroff(COLOR_PAIR(2));
             wrefresh(win);
@@ -428,12 +488,21 @@ public:
                 board[headY][headX] = 0;
                 growthcnt += 1;
                 fielditem -= 1;
+                if (tick > 100000) {
+                    tick -= 100000;
+                }
             } else if (board[headY][headX] == 6) {
                 x.pop_back();
                 y.pop_back();
                 board[headY][headX] = 0;
                 poisoncnt += 1;
                 fielditem -= 1;
+                if (tick > 100000) {
+                    tick += 100000;
+                }
+            } else if (board[headY][headX] == 9) {
+                gamelose = true;
+                break;
             }
 
             //노선 바꾸는 뱀 시각화
@@ -483,6 +552,10 @@ public:
                 poisonItemX = -1;
                 poisonItemY = -1;
             }
+            if (currentTime - itemTimer >= 10) { 
+                gameoverItemX = -1;
+                gameoverItemY = -1;
+            }
 
             if (growthItemX == -1 && growthItemY == -1) { 
                 int randX = rand() % 19 + 1; 
@@ -511,10 +584,24 @@ public:
                     itemTimer = currentTime; 
                 }
             }
+            if (gameoverItemX == -1 && gameoverItemY == -1) { 
+                int randX = rand() % 19 + 1;
+                int randY = rand() % 19 + 1;
+                if (board[randX][randY] == 0) { 
+                    gameoverItemX = randX;
+                    gameoverItemY = randY;
+                    if (gameoveritem < 1) {
+                        board[gameoverItemX][gameoverItemY] = 9;
+                        gameoveritem += 1;
+                    }
+                    itemTimer = currentTime; 
+                }
+            }
+            
 
             refresh();
 
-            usleep(500000);
+            usleep(tick);
 
             //키보드 입력받음, 반대 입력받으면 실패
             int key = getch();
@@ -656,25 +743,25 @@ int main() {
     
 
     games game1;
-    game1.game(board[0]);
+    game1.game(board[0], 1);
     if (game1.gamelose) {
         endwin();
         return 0;
     }
     games game2;
-    game2.game(board[1]);
+    game2.game(board[1], 2);
     if (game2.gamelose) {
         endwin();
         return 0;
     }
     games game3;
-    game3.game(board[2]);
+    game3.game(board[2], 3);
     if (game3.gamelose) {
         endwin();
         return 0;
     }
     games game4;
-    game4.game(board[3]);
+    game4.game(board[3], 4);
     if (game4.gamelose) {
         endwin();
         return 0;
